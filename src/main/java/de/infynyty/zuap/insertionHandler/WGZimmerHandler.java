@@ -3,20 +3,23 @@ package de.infynyty.zuap.insertionHandler;
 import de.infynyty.zuap.Zuap;
 import de.infynyty.zuap.insertion.WGZimmerInsertion;
 import org.jetbrains.annotations.NotNull;
-import org.jsoup.HttpStatusException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.select.Elements;
+import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxOptions;
+import org.openqa.selenium.support.ui.ExpectedCondition;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
-import java.io.IOException;
-import java.net.URI;
 import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.logging.Level;
 
-@Deprecated
 public class WGZimmerHandler extends InsertionHandler<WGZimmerInsertion> {
 
 
@@ -26,27 +29,52 @@ public class WGZimmerHandler extends InsertionHandler<WGZimmerInsertion> {
 
     //TODO: Make it possible to change search variables
     @Override
-    protected String pullUpdatedData() throws IOException, InterruptedException {
-        HttpRequest wgZimmerRequest = HttpRequest.newBuilder()
-            .uri(URI.create("https://www.wgzimmer.ch/wgzimmer/search/mate.html?"))
-            .header("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8")
-            .header("Accept-Encoding", "gzip, deflate, br")
-            .header("Content-Type", "application/x-www-form-urlencoded")
-            .POST(HttpRequest.BodyPublishers.ofString("query=&priceMin=200&priceMax=650&state=all&permanent"
-                + "=all&student=true&typeofwg=all&orderBy=%40sortDate&orderDir=descending&startSearchMate=true&wgStartSearch=true&start=0"))
-            .build();
+    protected String pullUpdatedData() {
+        var options = new FirefoxOptions();
+        options.addArguments("--headless");
+        var driver = new FirefoxDriver(options);
 
-        HttpResponse<String> wgZimmerResponse = getHttpClient().send(wgZimmerRequest,
-            HttpResponse.BodyHandlers.ofString());
+        driver.get("https://www.wgzimmer.ch/wgzimmer/search/mate.html");
 
-        if (wgZimmerResponse.statusCode() >= 299) {
-            throw new HttpStatusException(
-                    "Failed to update WGZimmer"
-                    , wgZimmerResponse.statusCode()
-                    , wgZimmerRequest.uri().toString()
-                    );
+        WebElement priceMinSelect = driver.findElement(By.name("priceMin"));
+        WebElement priceMaxSelect = driver.findElement(By.name("priceMax"));
+        WebElement wgStateSelect = driver.findElement(By.name("wgState"));
+
+        priceMinSelect.sendKeys("200");
+        priceMaxSelect.sendKeys("1500");
+        wgStateSelect.sendKeys("all");
+
+        WebElement searchButton = driver.findElement(By.xpath("//input[@value='Suchen']"));
+        searchButton.click();
+
+        var wait = new WebDriverWait(driver, Duration.ofSeconds(10));
+        ExpectedCondition<WebElement> condition = driver1 -> {
+            WebElement entry = findElementSafely(driver1, By.className("search-result-entry"));
+            if (entry != null) {
+                return entry;
+            }
+
+            WebElement captchaFail = findElementSafely(driver1, By.xpath("//div[@class='text no-link']/h1"));
+            return captchaFail;
+        };
+        WebElement element = wait.until(condition);
+        if (element.getTagName().equals("h1")) {
+            driver.quit();
+            Zuap.log(Level.SEVERE, getHandlerName(), "Captcha failed!");
+            throw new RuntimeException("Captcha failed!");
         }
-        return wgZimmerResponse.body();
+        var html = driver.getPageSource();
+        driver.quit();
+
+        return html;
+    }
+
+    private static WebElement findElementSafely(WebDriver driver, By by) {
+        try {
+            return driver.findElement(by);
+        } catch (NoSuchElementException e) {
+            return null;
+        }
     }
 
     @Override

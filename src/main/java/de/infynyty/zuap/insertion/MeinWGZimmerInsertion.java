@@ -1,5 +1,6 @@
 package de.infynyty.zuap.insertion;
 
+import de.infynyty.zuap.CantonResolver;
 import lombok.extern.java.Log;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -40,6 +41,12 @@ public class MeinWGZimmerInsertion extends Insertion {
         map.put("Move-in Date", Optional.of(new SimpleDateFormat("dd.MM.yyyy").format(setMoveInDate())));
         map.put("Next Tenant Wanted", Optional.of(setIsNewTenantWanted() ? "Yes" : "No"));
         return map;
+    }
+
+    @Override
+    @Nullable
+    protected String setCanton() {
+        return CantonResolver.getInstance().resolveCanton(super.getJsonObject().getString("City"));
     }
 
     @Override

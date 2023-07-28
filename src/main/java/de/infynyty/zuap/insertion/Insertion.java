@@ -22,6 +22,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.regex.Pattern;
 
 /**
  * This class contains all information for an insertion on the  <a href="https://www.woko.ch">WOKO platform</a>.
@@ -50,9 +51,11 @@ public abstract class Insertion {
     private final boolean isNextTenantWanted;
     @Nullable
     private final Date postDate;
+    @Nullable
+    private final String canton;
 
     @NotNull
-    private final SortedMap<String, Optional<String>> properties;
+    protected final SortedMap<String, Optional<String>> properties;
 
     /**
      * Constructs a new insertion object from a given html string. This constructor should be used when there is no
@@ -72,6 +75,7 @@ public abstract class Insertion {
         this.rent = setRent();
 
         this.postDate = setPostDate();
+        this.canton = setCanton();
     }
 
     /**
@@ -92,6 +96,7 @@ public abstract class Insertion {
         this.rent = setRent();
 
         this.postDate = setPostDate();
+        this.canton = setCanton();
     }
 
     @NotNull
@@ -133,6 +138,11 @@ public abstract class Insertion {
      */
     @Nullable
     protected Date setPostDate() {
+        return null;
+    }
+
+    @Nullable
+    protected String setCanton() {
         return null;
     }
 

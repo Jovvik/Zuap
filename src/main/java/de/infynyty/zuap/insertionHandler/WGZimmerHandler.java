@@ -31,7 +31,7 @@ public class WGZimmerHandler extends InsertionHandler<WGZimmerInsertion> {
     @Override
     protected String pullUpdatedData() {
         var options = new FirefoxOptions();
-        options.addArguments("--headless");
+        // options.addArguments("--headless");
         var driver = new FirefoxDriver(options);
 
         driver.get("https://www.wgzimmer.ch/wgzimmer/search/mate.html");

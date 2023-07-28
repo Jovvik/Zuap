@@ -1,5 +1,6 @@
 package de.infynyty.zuap.insertion;
 
+import de.infynyty.zuap.CantonResolver;
 import de.infynyty.zuap.Zuap;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -48,6 +49,12 @@ public class FlatfoxInsertion extends Insertion {
     }
 
     @Override
+    @Nullable
+    protected String setCanton() {
+        return CantonResolver.getInstance().resolveCanton(setCity());
+    }
+
+    @Override
     protected @Nullable Date setMoveInDate() {
         if (!super.getJsonObject().has("moving_date") || super.getJsonObject().isNull("moving_date")) {
             return null;
@@ -83,6 +90,10 @@ public class FlatfoxInsertion extends Insertion {
 
     private String setAddress() {
         return super.getJsonObject().getString("public_address");
+    }
+
+    private String setCity() {
+        return super.getJsonObject().getString("city");
     }
 
     private int setLivingSpace() {

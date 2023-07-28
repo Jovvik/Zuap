@@ -11,7 +11,10 @@ import java.nio.file.Path;
 import java.sql.Date;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
 public abstract class InsertionHandler<Insertion extends de.infynyty.zuap.insertion.Insertion> {
@@ -23,7 +26,7 @@ public abstract class InsertionHandler<Insertion extends de.infynyty.zuap.insert
     /**
      * Used to compare updated insertions with locally saved info. Should be empty before updating local insertions.
      */
-    private final ArrayList<Insertion> updatedInsertions = new ArrayList<>();
+    private List<Insertion> updatedInsertions = new ArrayList<>();
     @NotNull
     private final String handlerName;
     @NotNull
@@ -66,6 +69,19 @@ public abstract class InsertionHandler<Insertion extends de.infynyty.zuap.insert
             Zuap.log(Level.SEVERE, handlerName, "An exception occurred while trying to update the insertions. " + e.getMessage());
             return;
         }
+        updatedInsertions = updatedInsertions.stream().filter(insertion -> {
+            String canton = insertion.getCanton();
+            if (canton == null) {
+                Zuap.log(Level.WARNING, handlerName, "Insertion " + insertion.getInsertionURI() + " has no canton.");
+                return true;
+            }
+            if (canton.equals("Zurich")) {
+                return true;
+            } else {
+                Zuap.log(Level.INFO, handlerName, "Insertion in canton " + canton + " was filtered out.");
+                return false;
+            }
+        }).collect(Collectors.toCollection(ArrayList::new));
         if (!isInitialized) {
             addInitialInsertions();
             return;

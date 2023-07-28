@@ -1,5 +1,6 @@
 package de.infynyty.zuap.insertion;
 
+import de.infynyty.zuap.CantonResolver;
 import lombok.extern.java.Log;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -45,6 +46,11 @@ public class WGZimmerInsertion extends Insertion {
         return map;
     }
 
+    @Override
+    protected String setCanton() {
+        return CantonResolver.getInstance().resolveCanton(properties.get("Region").get().split(",")[0]);
+    }
+
     private String setRegion() {
         Element strongElement = super.getElement().select("span.thumbState strong").first();
         String strongText = strongElement.text();
@@ -55,7 +61,7 @@ public class WGZimmerInsertion extends Insertion {
     @Override
     protected int setRent() {
         final Elements priceElements = super.getElement().getElementsByClass("cost");
-        String price = priceElements.text();
+        String price = priceElements.text().replace(".", "");
         try {
             return (int) Float.parseFloat(price);
         } catch (NumberFormatException e) {
@@ -73,10 +79,10 @@ public class WGZimmerInsertion extends Insertion {
     @Override
     protected @Nullable Date setMoveInDate() {
         final String moveInDate = super.getElement()
-            .getElementsByClass("from-date")
-            .get(0)
-            .getElementsByTag("strong")
-            .text();
+                .getElementsByClass("from-date")
+                .get(0)
+                .getElementsByTag("strong")
+                .text();
         try {
             return new SimpleDateFormat("dd.MM.yyyy").parse(moveInDate);
         } catch (ParseException e) {

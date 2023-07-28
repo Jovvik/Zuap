@@ -57,6 +57,11 @@ public class WOKOInsertion extends Insertion {
         return map;
     }
 
+    @Override
+    protected String setCanton() {
+        return "Zurich";
+    }
+
     //TODO: Use html parser instead of regex
 
     @Override
